@@ -76,12 +76,11 @@ def aksi_pertarungan(stdscr, player_stats, musuh, player_exp):
             if random.random() > musuh['dodge_chance']:
                 musuh['health'] -= player_stats['damage']
                 stdscr.addstr("Kamu menyerang terlebih dahulu!\n")
-                if musuh['health'] > 0:
-                    player_stats['health'] -= musuh['damage']
-                    stdscr.addstr(f"Musuh membalas dengan serangan dan menyebabkan {musuh['damage']} damage!\n")
-                else:
+                if musuh['health'] <= 0:
                     stdscr.addstr(f"{musuh['name']} telah mati!\n")
                     return "menang", musuh['drop_xp']
+                player_stats['health'] -= musuh['damage']
+                stdscr.addstr(f"Musuh membalas dengan serangan dan menyebabkan {musuh['damage']} damage!\n")
             else:
                 stdscr.addstr(f"{musuh['name']} berhasil menghindari seranganmu!\n")
         else:
@@ -133,6 +132,24 @@ def level_up(stdscr, player_stats):
         else:
             stdscr.addstr("Pilihan tidak valid! Coba lagi.\n")
 
+def xp_required_for_level(level):
+    if level == 1:
+        return 8
+    elif level == 2:
+        return 12
+    elif level == 3:
+        return 14
+    elif level == 4:
+        return 16
+    elif level == 5:
+        return 18
+    elif level == 6:
+        return 20
+    elif level == 7:
+        return 24
+    else:
+        return 30
+
 def stage(stdscr, player_stats, player_level, player_exp, musuh_name):
     musuh = musuh_list[musuh_name]
     stdscr.clear()
@@ -150,8 +167,9 @@ def stage(stdscr, player_stats, player_level, player_exp, musuh_name):
             stdscr.addstr(f"Kamu mendapatkan {gained_xp} XP!\n")
             player_exp += gained_xp
             
-            while player_exp >= 8 * player_level:
-                player_exp -= 8 * player_level
+            # Cek apakah pemain naik level
+            while player_exp >= xp_required_for_level(player_level) and player_level < 8:
+                player_exp -= xp_required_for_level(player_level)
                 player_level += 1
                 level_up(stdscr, player_stats)
                 
@@ -161,6 +179,8 @@ def stage(stdscr, player_stats, player_level, player_exp, musuh_name):
 
         stdscr.refresh()
         time.sleep(2)
+    
+    return player_level, player_exp
 
 def main(stdscr):
     curses.curs_set(0)
@@ -189,6 +209,6 @@ def main(stdscr):
 
     player_level, player_exp = 1, 0
     for musuh_name in musuh_list.keys():
-        stage(stdscr, pilihan_senjata, player_level, player_exp, musuh_name)
+        player_level, player_exp = stage(stdscr, pilihan_senjata, player_level, player_exp, musuh_name)
 
 wrapper(main)
