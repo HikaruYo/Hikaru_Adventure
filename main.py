@@ -28,7 +28,7 @@ musuh_list = {
         'speed': 2,
         'health': 20
     },
-    # Anda bisa menambahkan musuh lainnya di sini
+
     # 'Orc': {
     #     'damage': 5,
     #     'speed': 1,
@@ -94,7 +94,7 @@ def main(stdscr):
     stdscr.addstr(f"Kamu bertemu dengan {musuh['name']}!\n")
     stdscr.addstr("Bersiaplah untuk pertempuran!\n")
     stdscr.refresh()
-    time.sleep(5)  # Memberikan waktu bagi pemain untuk membaca pesan
+    time.sleep(4)  # Memberikan waktu bagi pemain untuk membaca pesan
 
     # Masuk ke loop Stage 1
     stage1 = True
