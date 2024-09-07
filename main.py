@@ -1,6 +1,4 @@
-import curses
-import time
-import random
+import curses, time, random
 from curses import wrapper
 
 # Mendefinisikan senjata sebagai dictionary
@@ -30,17 +28,49 @@ musuh_list = {
         'speed': 2,
         'health': 20
     },
-    # 'Orc': {
-    #     'damage': 5,
-    #     'speed': 1,
-    #     'health': 25
-    # }
 }
+
+def level_up(stdscr, player_stats):
+    # Menawarkan peningkatan stat
+    choice_made = False
+    while not choice_made:
+        stdscr.clear()
+        stdscr.addstr("\nKamu naik level! Pilih salah satu stat untuk ditingkatkan:\n")
+        stdscr.addstr("1. Health\n")
+        stdscr.addstr("2. Damage\n")
+        stdscr.addstr("3. Speed\n")
+        stdscr.addstr("Masukkan pilihanmu: ")
+        stdscr.refresh()
+
+        choice = stdscr.getkey()
+
+        if choice == '1':
+            player_stats['health'] += 5
+            stdscr.addstr("\nHealth kamu meningkat menjadi " + str(player_stats['health']) + "\n")
+            choice_made = True
+        elif choice == '2':
+            player_stats['damage'] += 2
+            stdscr.addstr("\nDamage kamu meningkat menjadi " + str(player_stats['damage']) + "\n")
+            choice_made = True
+        elif choice == '3':
+            player_stats['speed'] += 1
+            stdscr.addstr("\nSpeed kamu meningkat menjadi " + str(player_stats['speed']) + "\n")
+            choice_made = True
+        else:
+            stdscr.addstr("\nPilihan tidak valid! Coba lagi.\n")
+        stdscr.refresh()
+        time.sleep(2)
 
 def main(stdscr):
     # Inisialisasi layar
     curses.curs_set(0)  # Menyembunyikan kursor
     stdscr.clear()
+    
+    # Inisialisasi level pemain
+    player_level = 1
+    player_exp = 0
+    exp_to_level_2 = 10
+    exp_to_level_3 = 20
     
     # Epilog - Pemilihan Senjata
     epilog = True
@@ -76,7 +106,6 @@ def main(stdscr):
             epilog = False
         elif key == '3':
             stdscr.addstr("\nKamu memilih Busur pendek!\n")
-            pilihan_senjata = senjata['Busur pendek']
             epilog = False
         else:
             stdscr.addstr("\nPilihan tidak valid! Coba lagi.\n")
@@ -95,7 +124,7 @@ def main(stdscr):
     stdscr.addstr(f"Kamu bertemu dengan {musuh['name']}!\n")
     stdscr.addstr("Bersiaplah untuk pertempuran!\n")
     stdscr.refresh()
-    time.sleep(4)  # Memberikan waktu bagi pemain untuk membaca pesan
+    time.sleep(4)
 
     # Masuk ke loop Stage 1
     stage1 = True
@@ -104,10 +133,12 @@ def main(stdscr):
 
         # Tampilkan status pemain dan musuh
         stdscr.addstr("=== Status ===\n")
+        stdscr.addstr(f"Level Pemain : {player_level}\n")
         stdscr.addstr("Status Pemain:\n")
         stdscr.addstr(f"Health : {pilihan_senjata['health']}\n")
         stdscr.addstr(f"Damage : {pilihan_senjata['damage']}\n")
-        stdscr.addstr(f"Speed  : {pilihan_senjata['speed']}\n\n")
+        stdscr.addstr(f"Speed  : {pilihan_senjata['speed']}\n")
+        stdscr.addstr(f"XP     : {player_exp}\n\n")
         
         stdscr.addstr(f"Status {musuh['name']}:\n")
         stdscr.addstr(f"Health : {musuh['health']}\n")
@@ -136,7 +167,7 @@ def main(stdscr):
                 stdscr.addstr(f"{musuh['name']} berhasil menghindar dari seranganmu!\n")
             else:
                 musuh['health'] -= pilihan_senjata['damage']
-                stdscr.addstr(f"Kamu menyerang {musuh['name']} dan mengurangi {pilihan_senjata['damage']} health musuh!\n\n")
+                stdscr.addstr(f"Kamu menyerang {musuh['name']} dan mengurangi {pilihan_senjata['damage']} health musuh!\n")
             
             stdscr.refresh()
             time.sleep(2)
@@ -145,6 +176,11 @@ def main(stdscr):
                 stdscr.addstr(f"\nKamu telah mengalahkan {musuh['name']}!\n")
                 stdscr.refresh()
                 stage1 = False
+                player_exp += 10
+                if player_exp >= exp_to_level_2:
+                    player_level += 1
+                    player_exp -= exp_to_level_2
+                    level_up(stdscr, pilihan_senjata)
             else:
                 # Serangan balasan dari musuh
                 if musuh_aksi == 'serang':
