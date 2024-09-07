@@ -1,6 +1,6 @@
 import curses
 import time
-import random  # Untuk menentukan aksi musuh secara acak
+import random
 from curses import wrapper
 
 # Mendefinisikan senjata sebagai dictionary
