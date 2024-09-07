@@ -1,5 +1,6 @@
 import curses
 import time
+import random  # Untuk menentukan aksi musuh secara acak
 from curses import wrapper
 
 # Mendefinisikan senjata sebagai dictionary
@@ -24,11 +25,11 @@ senjata = {
 # Kategori musuh
 musuh_list = {
     'Goblin Hutan': {
+        'name': 'Goblin Hutan',
         'damage': 3,
         'speed': 2,
         'health': 20
     },
-
     # 'Orc': {
     #     'damage': 5,
     #     'speed': 1,
@@ -114,7 +115,7 @@ def main(stdscr):
         stdscr.addstr(f"Speed  : {musuh['speed']}\n")
 
         stdscr.addstr("\n=== Aksi ===\n")
-        stdscr.addstr("Tekan 'a' untuk menyerang,'d' untuk menghindar, atau 'l' untuk lari!\n")
+        stdscr.addstr("Tekan 'a' untuk menyerang, 'd' untuk menghindar, atau 'l' untuk lari!\n")
         stdscr.refresh()
 
         try:
@@ -122,48 +123,36 @@ def main(stdscr):
         except:
             action = ''
 
+        # Aksi pemain
         if action.lower() == 'a':
-            # Tentukan siapa yang menyerang duluan berdasarkan speed
-            if pilihan_senjata['speed'] >= musuh['speed']:
-                # Pemain menyerang duluan
-                stdscr.addstr("\nKamu menyerang duluan!\n")
-                stdscr.refresh()
-                time.sleep(3)
+            # Pemain menyerang
+            stdscr.addstr("\nKamu memilih untuk menyerang!\n")
+            stdscr.refresh()
+            time.sleep(2)
 
-                # Pemain menyerang
+            # Musuh memilih tindakan (50% kemungkinan menyerang, 50% kemungkinan menghindar)
+            musuh_aksi = random.choice(['serang', 'menghindar'])
+            if musuh_aksi == 'menghindar' and musuh['speed'] >= pilihan_senjata['speed']:
+                stdscr.addstr(f"{musuh['name']} berhasil menghindar dari seranganmu!\n")
+            else:
                 musuh['health'] -= pilihan_senjata['damage']
-                stdscr.addstr(f"Kamu menyerang {musuh['name']} dan mengurangi {pilihan_senjata['damage']} health musuh!\n")
+                stdscr.addstr(f"Kamu menyerang {musuh['name']} dan mengurangi {pilihan_senjata['damage']} health musuh!\n\n")
+            
+            stdscr.refresh()
+            time.sleep(2)
+
+            if musuh['health'] <= 0:
+                stdscr.addstr(f"\nKamu telah mengalahkan {musuh['name']}!\n")
                 stdscr.refresh()
-                time.sleep(2)
-
-                if musuh['health'] <= 0:
-                    stdscr.addstr(f"\nKamu telah mengalahkan {musuh['name']}!\n")
-                    stdscr.refresh()
-                    stage1 = False
-                else:
-                    # Musuh menyerang balik
-                    stdscr.addstr(f"\n{musuh['name']} menyerang balik!\n")
-                    stdscr.refresh()
-                    time.sleep(3)
-
+                stage1 = False
+            else:
+                # Serangan balasan dari musuh
+                if musuh_aksi == 'serang':
+                    stdscr.addstr(f"{musuh['name']} menyerang balik!\n")
                     pilihan_senjata['health'] -= musuh['damage']
                     stdscr.addstr(f"{musuh['name']} menyerang kamu dan mengurangi {musuh['damage']} health kamu!\n")
-                    stdscr.refresh()
-                    time.sleep(2)
-
-                    if pilihan_senjata['health'] <= 0:
-                        stdscr.addstr("\nKamu kalah dalam pertempuran...\n")
-                        stdscr.refresh()
-                        stage1 = False
-            else:
-                # Musuh menyerang duluan
-                stdscr.addstr(f"\n{musuh['name']} menyerang duluan!\n")
-                stdscr.refresh()
-                time.sleep(3)
-
-                # Musuh menyerang
-                pilihan_senjata['health'] -= musuh['damage']
-                stdscr.addstr(f"{musuh['name']} menyerang kamu dan mengurangi {musuh['damage']} health kamu!\n")
+                else:
+                    stdscr.addstr(f"{musuh['name']} memilih untuk bertahan dan menghindar!\n")
                 stdscr.refresh()
                 time.sleep(2)
 
@@ -171,23 +160,13 @@ def main(stdscr):
                     stdscr.addstr("\nKamu kalah dalam pertempuran...\n")
                     stdscr.refresh()
                     stage1 = False
-                else:
-                    # Pemain menyerang setelah musuh
-                    stdscr.addstr(f"\nKamu menyerang {musuh['name']}!\n")
-                    stdscr.refresh()
-                    time.sleep(3)
-
-                    musuh['health'] -= pilihan_senjata['damage']
-                    stdscr.addstr(f"Kamu menyerang {musuh['name']} dan mengurangi {pilihan_senjata['damage']} health musuh!\n")
-                    stdscr.refresh()
-                    time.sleep(2)
-
-                    if musuh['health'] <= 0:
-                        stdscr.addstr(f"\nKamu telah mengalahkan {musuh['name']}!\n")
-                        stdscr.refresh()
-                        stage1 = False
-                        
+        
         elif action.lower() == 'd':
+            # Pemain mencoba menghindar
+            stdscr.addstr(f"Kamu mencoba menghindar!\n")
+            stdscr.refresh()
+            time.sleep(2)
+
             if pilihan_senjata['speed'] > musuh['speed']:
                 stdscr.addstr(f"Kamu berhasil menghindar dari serangan {musuh['name']}!\n")
             else:
