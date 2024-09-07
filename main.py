@@ -29,13 +29,16 @@ musuh_list = {
         'name': 'Goblin Hutan',
         'damage': 3,
         'speed': 2,
-        'health': 20
+        'health': 20,
+        'drop_xp': 10,
     },
-    # 'Orc': {
-    #     'damage': 5,
-    #     'speed': 1,
-    #     'health': 25
-    # }
+    'Orc': {
+        'name': 'Orc',
+        'damage': 5,
+        'speed': 1,
+        'health': 25,
+        'drop_xp': 20,
+    }
 }
 
 def level_up(stdscr, player_stats):
@@ -81,8 +84,8 @@ def main(stdscr):
     # Inisialisasi level pemain
     player_level = 1
     player_exp = 0
-    exp_to_level_2 = 10
-    exp_to_level_3 = 20
+    exp_to_level_2 = 8
+    exp_to_level_3 = 16
     
     # Epilog - Pemilihan Senjata
     epilog = True
@@ -118,6 +121,7 @@ def main(stdscr):
             epilog = False
         elif key == '3':
             stdscr.addstr("\nKamu memilih Busur pendek!\n")
+            pilihan_senjata = senjata['Busur pendek']
             epilog = False
         else:
             stdscr.addstr("\nPilihan tidak valid! Coba lagi.\n")
@@ -129,7 +133,8 @@ def main(stdscr):
 
     # Bersihkan layar dan masuk ke Stage 1
     musuh = musuh_list['Goblin Hutan']
-    
+    drop_xp = musuh['drop_xp']
+
     stdscr.clear()
     stdscr.addstr("=== Level 1 ===\n")
     stdscr.addstr("\nKamu memasuki hutan gelap dan mendengar suara langkah kaki...\n")
@@ -182,78 +187,215 @@ def main(stdscr):
                     stdscr.addstr(f"{musuh['name']} gagal menghindar karena kecepatan kamu lebih tinggi!\n")
                     musuh['health'] -= pilihan_senjata['damage']
                     stdscr.addstr(f"Kamu menyerang {musuh['name']} dan mengurangi {pilihan_senjata['damage']} health musuh!\n")
+                    # Musuh tidak bisa menyerang balik jika gagal menghindar
+                    stdscr.addstr(f"{musuh['name']} terlalu lambat untuk menyerang balik!\n")
             else:
                 musuh['health'] -= pilihan_senjata['damage']
                 stdscr.addstr(f"Kamu menyerang {musuh['name']} dan mengurangi {pilihan_senjata['damage']} health musuh!\n")
-            
+                # Musuh menyerang balik jika tidak menghindar
+                stdscr.addstr(f"{musuh['name']} menyerang balik!\n")
+                pilihan_senjata['health'] -= musuh['damage']
+                stdscr.addstr(f"{musuh['name']} memberikan {musuh['damage']} damage!\n")
+
             stdscr.refresh()
             time.sleep(2)
+
+            if pilihan_senjata['health'] <= 0:
+                stdscr.addstr("\nKamu telah dikalahkan!\n")
+                stdscr.refresh()
+                time.sleep(3)
+                break
 
             if musuh['health'] <= 0:
                 stdscr.addstr(f"\nKamu telah mengalahkan {musuh['name']}!\n")
                 stdscr.refresh()
                 stage1 = False
-                player_exp += 10
-                # Jika level up terjadi setelah pertempuran
-            if player_exp >= exp_to_level_2:
-                player_level += 1
-                player_exp -= exp_to_level_2
-                level_up(stdscr, pilihan_senjata)
+                player_exp += drop_xp
 
+
+        elif action.lower() == 'd':
+            stdscr.addstr("\nKamu memilih untuk menghindar!\n")
+            stdscr.refresh()
+            time.sleep(2)
+
+            if musuh['speed'] >= pilihan_senjata['speed']:
+                stdscr.addstr(f"{musuh['name']} menyerangmu sebelum kamu bisa menghindar!\n")
+                pilihan_senjata['health'] -= musuh['damage']
             else:
-                # Serangan balasan dari musuh
-                if musuh_aksi == 'serang':
-                    stdscr.addstr(f"{musuh['name']} menyerang balik!\n")
-                    pilihan_senjata['health'] -= musuh['damage']
-                    stdscr.addstr(f"{musuh['name']} menyerang kamu dan mengurangi {musuh['damage']} health kamu!\n")
+                stdscr.addstr(f"Kamu berhasil menghindari serangan {musuh['name']}!\n")
+            
+            stdscr.refresh()
+            time.sleep(2)
+
+            if pilihan_senjata['health'] <= 0:
+                stdscr.addstr("\nKamu telah dikalahkan!\n")
+                stdscr.refresh()
+                time.sleep(3)
+                break
+
+        elif action.lower() == 'l':
+            stdscr.addstr("\nKamu memilih untuk melarikan diri!\n")
+            stdscr.refresh()
+            time.sleep(2)
+            stdscr.addstr(f"Kamu berhasil lari dari {musuh['name']}!\n")
+            stdscr.refresh()
+            break
+        else:
+            stdscr.addstr("\nAksi tidak valid, coba lagi!\n")
+            stdscr.refresh()
+
+        # Pemain kalah
+        if pilihan_senjata['health'] <= 0:
+            stdscr.addstr("\nKamu telah dikalahkan!\n")
+            stdscr.refresh()
+            time.sleep(3)
+            break
+    
+    # Lanjut ke stage 2 jika pemain menang
+    if not stage1:
+        if player_exp >= exp_to_level_2:
+            stdscr.addstr("\nKamu naik level ke Level 2!\n")
+            stdscr.refresh()
+            level_up(stdscr, pilihan_senjata)
+            player_level = 2
+        
+        # Mulai Stage 2
+        stdscr.clear()
+        stdscr.addstr("=== Level 2 ===\n")
+        stdscr.addstr("\nKamu memasuki rawa-rawa dan merasakan guncangan pada tanah...\n")
+        stdscr.addstr(f"Kamu bertemu dengan {musuh['name']}!\n")
+        stdscr.addstr("Bersiaplah untuk pertempuran!\n")
+        stdscr.refresh()
+        time.sleep(4)
+
+        musuh = musuh_list['Orc']  # Stage 2 musuh
+
+        stdscr.clear()
+        stdscr.addstr("=== Level 2 ===\n")
+        stdscr.addstr(f"Kamu bertemu dengan {musuh['name']}! Bersiaplah untuk bertarung lagi.\n")
+        stdscr.refresh()
+
+        stage2 = True
+        while stage2:
+            stdscr.clear()
+            
+            # Tampilkan status pemain dan musuh
+            stdscr.addstr("=== Status ===\n")
+            stdscr.addstr(f"Level Pemain : {player_level}\n")
+            stdscr.addstr("Status Pemain:\n")
+            stdscr.addstr(f"Health : {pilihan_senjata['health']}\n")
+            stdscr.addstr(f"Damage : {pilihan_senjata['damage']}\n")
+            stdscr.addstr(f"Speed  : {pilihan_senjata['speed']}\n")
+            stdscr.addstr(f"XP     : {player_exp}\n\n")
+            
+            stdscr.addstr(f"Status {musuh['name']}:\n")
+            stdscr.addstr(f"Health : {musuh['health']}\n")
+            stdscr.addstr(f"Damage : {musuh['damage']}\n")
+            stdscr.addstr(f"Speed  : {musuh['speed']}\n")
+
+            stdscr.addstr("\n=== Aksi ===\n")
+            stdscr.addstr("Tekan 'a' untuk menyerang, 'd' untuk menghindar, atau 'l' untuk lari!\n")
+            stdscr.refresh()
+
+            try:
+                action = stdscr.getkey()
+            except:
+                action = ''
+
+            # Logika bertarung mirip seperti di stage 1
+            if action.lower() == 'a':
+                stdscr.addstr("\nKamu memilih untuk menyerang!\n")
+                stdscr.refresh()
+                time.sleep(2)
+
+                # Musuh memilih tindakan (50% kemungkinan menyerang, 50% kemungkinan menghindar)
+                musuh_aksi = random.choice(['serang', 'menghindar'])
+                if musuh_aksi == 'menghindar':
+                    if musuh['speed'] >= pilihan_senjata['speed']:
+                        stdscr.addstr(f"{musuh['name']} berhasil menghindar dari seranganmu!\n")
+                    else:
+                        stdscr.addstr(f"{musuh['name']} gagal menghindar karena kecepatan kamu lebih tinggi!\n")
+                        musuh['health'] -= pilihan_senjata['damage']
+                        stdscr.addstr(f"Kamu menyerang {musuh['name']} dan mengurangi {pilihan_senjata['damage']} health musuh!\n")
                 else:
-                    stdscr.addstr(f"{musuh['name']} memilih untuk bertahan dan menghindar!\n")
+                    musuh['health'] -= pilihan_senjata['damage']
+                    stdscr.addstr(f"Kamu menyerang {musuh['name']} dan mengurangi {pilihan_senjata['damage']} health musuh!\n")
+
+                stdscr.refresh()
+                time.sleep(2)
+
+                if musuh['health'] <= 0:
+                    stdscr.addstr(f"\nKamu telah mengalahkan {musuh['name']}!\n")
+                    stdscr.refresh()
+                    stage2 = False
+                    player_exp += musuh['drop_xp']
+                    # Jika level up terjadi setelah pertempuran
+                else:
+                    # Musuh menyerang balik jika tidak kalah
+                    stdscr.addstr(f"{musuh['name']} menyerang balik!\n")
+                    stdscr.refresh()
+                    time.sleep(2)
+                    pilihan_senjata['health'] -= musuh['damage']
+                    stdscr.addstr(f"{musuh['name']} memberikan {musuh['damage']} damage!\n")
+
+                if pilihan_senjata['health'] <= 0:
+                    stdscr.addstr("\nKamu telah dikalahkan!\n")
+                    stdscr.refresh()
+                    time.sleep(3)
+                    break
+
+            elif action.lower() == 'd':
+                stdscr.addstr("\nKamu memilih untuk menghindar!\n")
+                stdscr.refresh()
+                time.sleep(2)
+
+                if musuh['speed'] >= pilihan_senjata['speed']:
+                    stdscr.addstr(f"{musuh['name']} menyerangmu sebelum kamu bisa menghindar!\n")
+                    pilihan_senjata['health'] -= musuh['damage']
+                else:
+                    stdscr.addstr(f"Kamu berhasil menghindari serangan {musuh['name']}!\n")
+
                 stdscr.refresh()
                 time.sleep(2)
 
                 if pilihan_senjata['health'] <= 0:
-                    stdscr.addstr("\nKamu kalah dalam pertempuran...\n")
+                    stdscr.addstr("\nKamu telah dikalahkan!\n")
                     stdscr.refresh()
-                    stage1 = False
+                    time.sleep(3)
+                    break
 
-        
-        elif action.lower() == 'd':
-            # Pemain mencoba menghindar
-            stdscr.addstr(f"Kamu mencoba menghindar!\n")
-            stdscr.refresh()
-            time.sleep(2)
+            elif action.lower() == 'l':
+                stdscr.addstr("\nKamu memilih untuk melarikan diri!\n")
+                stdscr.refresh()
+                time.sleep(2)
+                stdscr.addstr(f"Kamu berhasil lari dari {musuh['name']}!\n")
+                stdscr.refresh()
+                break
 
-            if pilihan_senjata['speed'] > musuh['speed']:
-                stdscr.addstr(f"Kamu berhasil menghindar dari serangan {musuh['name']}!\n")
             else:
-                stdscr.addstr(f"Kamu gagal menghindar dari serangan {musuh['name']}!\n")
-                pilihan_senjata['health'] -= musuh['damage']
-                stdscr.addstr(f"{musuh['name']} menyerang kamu dan mengurangi {musuh['damage']} health kamu!\n")
-            stdscr.refresh()
-            time.sleep(2)
+                stdscr.addstr("\nAksi tidak valid, coba lagi!\n")
+                stdscr.refresh()
 
-        elif action.lower() == 'l':
-            stdscr.addstr("\nKamu memutuskan untuk lari dari pertarungan!\n")
+            # Pemain kalah
+            if pilihan_senjata['health'] <= 0:
+                stdscr.addstr("\nKamu telah dikalahkan!\n")
+                stdscr.refresh()
+                time.sleep(3)
+                break
+        
+        stdscr.clear()
+        stdscr.addstr(f"{musuh['name']} berhasil dikalahkan\n")
+        
+        # Berikan XP kepada pemain dan cek apakah naik level ke level 3
+        player_exp += musuh['drop_xp']
+        if player_exp >= exp_to_level_3:
+            stdscr.addstr("\nKamu naik level ke Level 3!\n")
             stdscr.refresh()
-            stage1 = False
-            time.sleep(2)
-        else:
-            stdscr.addstr("\nAksi tidak valid! Coba lagi.\n")
-            stdscr.refresh()
-            time.sleep(2)
-
-    # Setelah pertarungan selesai
-    stdscr.clear()
-    stdscr.addstr("\n=== Pertarungan Selesai ===\n")
-    if pilihan_senjata['health'] > 0 and musuh['health'] <= 0:
-        stdscr.addstr(f"Selamat! Kamu berhasil mengalahkan {musuh['name']} dan melanjutkan petualanganmu.\n")
-    elif pilihan_senjata['health'] <= 0:
-        stdscr.addstr("Sayang sekali, kamu telah kalah dalam pertempuran.\n")
-    else:
-        stdscr.addstr("Kamu berhasil keluar dari pertarungan.\n")
-    
-    stdscr.addstr("\nTekan tombol apapun untuk keluar dari permainan.\n")
-    stdscr.refresh()
-    stdscr.getch()
+            level_up(stdscr, pilihan_senjata)
+            player_level = 3
+        
+        stdscr.addstr("\nTekan tombol apapun untuk melanjutkan.\n")
+        stdscr.refresh()
+        stdscr.getch()  # Menunggu pemain menekan tombol sebelum keluar
 
 wrapper(main)
